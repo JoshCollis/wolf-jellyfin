@@ -1,0 +1,27 @@
+name: Image validation
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+  validate:
+    if: github.event_name == 'workflow_dispatch'
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned runtime and test image
+        run: |
+          docker build --target runtime -t wolf-jellyfin:local-review .
+          bash tests/image-home.sh
+          docker build --target test -t wolf-jellyfin:test .
+      - name: Software native-client acceptance
+        run: python3 tests/acceptance.py

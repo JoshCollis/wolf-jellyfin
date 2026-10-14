@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+artifacts/
+evidence/
+*.log
+.env
+.env.*

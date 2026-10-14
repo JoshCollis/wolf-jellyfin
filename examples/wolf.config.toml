@@ -1,0 +1,36 @@
+# Each Wolf profile/app needs a DIFFERENT local persistent directory.
+[[apps]]
+title = "Jellyfin Desktop"
+start_virtual_compositor = true
+# render_node = "/dev/dri/renderD128"  # match the Wolf host; never guess
+[apps.runner]
+type = "docker"
+name = "WolfJellyfin"
+image = "wolf-jellyfin:local"
+mounts = ["/absolute/path/to/this-profile-jellyfin-home:/home/retro:rw"]
+# Wolf's generated runner adds its audio/Wayland/udev/input/GPU mounts.
+# Inspect generated mounts before first launch.
+devices = []
+ports = []
+env = [
+  "PUID=1000", "PGID=1000", "UNAME=retro", "HOME=/home/retro",
+  "JELLYFIN_PROFILE=Default",
+  "PULSE_SERVER=unix:/run/user/wolf/pulse-socket",
+  "GOW_REQUIRED_DEVICES=/dev/input/* /dev/dri/* /dev/uinput",
+  "QT_QPA_PLATFORM=wayland",
+  "RUN_SWAY=false", "RUN_GAMESCOPE=false",
+]
+# Docker container creation options.
+# Personal-trusted-app compatibility policy: Chromium's sandbox remains ON;
+# these relaxations permit its nested user namespace. Never privileged/no-sandbox.
+# Narrow seccomp/AppArmor only after isolated target-host sandbox/input validation.
+base_create_json = '''
+{
+  "HostConfig": {
+    "Privileged": false,
+    "ShmSize": 536870912,
+    "SecurityOpt": ["seccomp=unconfined", "apparmor=unconfined"],
+    "DeviceCgroupRules": ["c 13:* rmw"]
+  }
+}
+'''

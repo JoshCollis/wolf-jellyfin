@@ -1,0 +1,11 @@
+--- a/src/player/PlayerComponent.cpp
++++ b/src/player/PlayerComponent.cpp
+@@ -1383,7 +1383,7 @@
+   QVariant mode = SettingsComponent::Get().value(SETTINGS_SECTION_VIDEO, "aspect").toString();
+   bool disableScaling = false;
+   bool keepAspect = true;
+-  QString forceAspect = "no";
++  QString forceAspect = "-1";
+   double panScan = 0.0;
+   if (mode == "custom")
+   {
