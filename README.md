@@ -12,6 +12,11 @@ A bundled one-line compatibility patch makes mpv prefer the container aspect rat
 docker build -t wolf-jellyfin:local .
 ```
 
+Pushes to `main` build and test the image, then publish the runtime to
+`ghcr.io/joshcollis/wolf-jellyfin:latest` and `:sha-<commit>`. Manual workflow runs
+on `main` also publish; pull requests run unit tests without registry access.
+GHCR package visibility is managed separately from repository visibility.
+
 ## Wolf setup
 
 Add the app from [`examples/wolf.config.toml`](examples/wolf.config.toml) to your Wolf configuration. Replace the HOME mount with a unique local directory for each Wolf profile/app:

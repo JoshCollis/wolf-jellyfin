@@ -1,10 +1,14 @@
-name: Image validation
+name: Build and publish image
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   unit:
     runs-on: ubuntu-latest
@@ -12,10 +16,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unit tests
         run: python3 -m unittest discover -s tests -v
-  validate:
-    if: github.event_name == 'workflow_dispatch'
+  publish:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: unit
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Build pinned runtime and test image
@@ -25,3 +33,17 @@ jobs:
           docker build --target test -t wolf-jellyfin:test .
       - name: Software native-client acceptance
         run: python3 tests/acceptance.py
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Push tested runtime image
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker tag wolf-jellyfin:local-review "$image:sha-$GITHUB_SHA"
+          docker tag wolf-jellyfin:local-review "$image:latest"
+          docker push "$image:sha-$GITHUB_SHA"
+          docker push "$image:latest"
+      - name: Log out of GHCR
+        if: always()
+        run: docker logout ghcr.io
