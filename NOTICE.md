@@ -18,6 +18,12 @@ borderless, explicitly output-sized Wolf kiosk. The strict application helper
 `vendor/patches/apply-kiosk.py` and exact patch are copied alongside the source.
 The image launcher enables this policy without replacing persistent user data.
 
+The GPL-2.0-or-later `jellyfin-wolf-context-menu.patch` suppresses Qt's native
+context menu in Wolf kiosk mode without blocking the web client's context-menu
+events. `jellyfin-wolf-audio.patch` selects libmpv's PulseAudio output in that mode
+through MpvQt's initial property queue (2026-10-15). Both patches and their strict
+application helpers are included alongside the source.
+
 Official GoW base/entrypoint/device/NVIDIA infrastructure is MIT:
 https://github.com/games-on-whales/gow/blob/bc4bb677e3376e17265317f23d887ecf42de8972/LICENSE
 No endorsement or affiliation is claimed. Fedora, Qt, Chromium, libmpv, MpvQt, FFmpeg,

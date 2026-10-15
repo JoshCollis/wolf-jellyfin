@@ -20,6 +20,17 @@ def docker(*args,input=None,check=True,timeout=30):
 def js(expr):
     return json.loads(docker('exec','-i',name,'python3','/opt/wolf-jellyfin/tests/cdp.py',input=expr).stdout)
 
+def require_pulse_property(prop, marker):
+    js(f'api.player.userCommand({json.dumps("print-text " + marker + "=${" + prop + "}")});true')
+    deadline=time.monotonic()+3
+    while time.monotonic()<deadline:
+        log=docker('exec',name,'cat','/home/retro/evidence/client.log').stdout
+        if any(line.rsplit(marker+'=',1)[-1].strip()=='pulse'
+               for line in log.splitlines() if marker+'=' in line):
+            return
+        time.sleep(.1)
+    raise AssertionError(f'Expected {prop}=pulse in native mpv, see client log')
+
 def start():
     docker('run','-d','--name',name,'--network','none','--shm-size=512m',
            '--security-opt','seccomp=unconfined','--security-opt','apparmor=unconfined',
@@ -56,6 +67,7 @@ try:
         if js('document.title')=='Whale Jellyfin Synthetic UI' and js('typeof window.api')=='object':break
         time.sleep(.2)
     assert js("document.getElementById('custom-marker').innerText")== 'Original local HTML; not a Jellyfin server simulation.'
+    require_pulse_property('options/ao','WOLF_AO_CONFIG')
     # Exercise upstream key/controller mapping through the real local input socket.
     js("new Promise(r=>api.system.hello('isolated-fixture',r))")
     js("window.testInputs=[];api.input.hostInput.connect(a=>window.testInputs.push(...a));true")
@@ -71,6 +83,8 @@ try:
     # A real PulseAudio UNIX null sink receives mpv audio (not Moonlight acceptance).
     inputs=docker('exec','-u','1000','-e','PULSE_SERVER=unix:/run/wolf-jellyfin/pulse/native',name,'pactl','list','short','sink-inputs').stdout
     assert inputs.strip(), 'No actual mpv PulseAudio sink input'
+    require_pulse_property('current-ao','WOLF_AO_CURRENT')
+    assert js("Promise.race([new Promise(r=>api.window.isFullScreen(r)),new Promise(r=>setTimeout(()=>r('timeout'),2000))])") is True, 'Native UI stopped responding during playback'
     audio=docker('exec','-u','1000','-e','PULSE_SERVER=unix:/run/wolf-jellyfin/pulse/native',name,'bash','-c',
                  "timeout 2 parec --device=test-sink.monitor --format=s16le --rate=48000 --channels=2 > /home/retro/evidence/audio.raw || test $? = 124")
     signal=docker('exec',name,'python3','-c',
@@ -118,7 +132,8 @@ try:
             'position_seconds':[p1,p2],'duration_seconds':duration,'pause_seek':'pass',
             'presented_video_pixels':pixels,'native_input_mappings':actions,
             'test_only_rendering':'Xvfb GLX/llvmpipe; hwdec disabled; gpu-dumb-mode yes; WebEngine --disable-gpu',
-            'pulseaudio_unix_sink':'pass','audio_samples':audio_stats,
+             'pulseaudio_unix_sink':'pass','audio_samples':audio_stats,
+             'initial_ao_option':'pulse','active_audio_output':'pulse','native_ui_rpc_during_playback':'pass',
             'persistent_qt_storage_and_client_setting':'pass','nonrecursive_home_ownership':'pass',
             'concurrent_home_lease_refusal':'pass','graceful_exit':'pass',
             'image':image,'artifacts':str(ARTIFACTS),'native_gpu':'unverified','wolf_moonlight':'unverified',

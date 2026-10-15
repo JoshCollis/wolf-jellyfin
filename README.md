@@ -15,6 +15,8 @@ with `WOLF_JELLYFIN_KIOSK=1`; exiting fullscreen/minimizing is intentionally blo
 in this single-app image. Closing/quitting still works. Existing accounts, web
 storage and unrelated settings are preserved. Original source, exact patches and
 build instructions are included.
+Wolf kiosk mode also selects PulseAudio output and suppresses Qt's native context
+menu while preserving the web client's context-menu events.
 
 ## Build
 
@@ -53,7 +55,7 @@ A shared Wolf lobby shares the same UI, playback and logged-in account with all 
 
 ## Tests
 
-Requires Docker and Python 3 on the host:
+Requires Docker, Python 3 and a C++ compiler on the host:
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -61,6 +63,7 @@ docker build --pull --no-cache --target runtime -t wolf-jellyfin:local .
 bash tests/image-home.sh wolf-jellyfin:local
 docker build --target test -t wolf-jellyfin:test .
 python3 tests/fullscreen.py
+python3 tests/context_menu.py
 python3 tests/acceptance.py
 ```
 

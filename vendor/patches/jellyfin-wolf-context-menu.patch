@@ -1,0 +1,27 @@
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -500,6 +500,8 @@
+     QQmlApplicationEngine *engine = Globals::Engine();
+ 
+     Globals::SetContextProperty("components", &ComponentManager::Get().getQmlPropertyMap());
++    Globals::SetContextProperty("wolfJellyfinKiosk",
++                                QVariant(qEnvironmentVariableIntValue("WOLF_JELLYFIN_KIOSK") == 1));
+ 
+     // the only way to detect if QML parsing fails is to hook to this signal and then see
+     // if we get a valid object passed to it. Any error messages will be reported on stderr
+--- a/src/ui/webview.qml
++++ b/src/ui/webview.qml
+@@ -226,6 +226,13 @@
+   {
+     id: web
+     objectName: "web"
++
++    // Accept the native request in Wolf kiosk; leave web-app handlers untouched.
++    onContextMenuRequested: function(request)
++    {
++      if (wolfJellyfinKiosk)
++        request.accepted = true
++    }
+     width: mainWindow.width
+     height: mainWindow.height
+     z: 100

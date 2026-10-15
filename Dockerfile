@@ -10,6 +10,10 @@ RUN dnf install -y --setopt=install_weak_deps=False git cmake ninja-build gcc-c+
 RUN git clone --depth 1 https://github.com/jellyfin/jellyfin-desktop.git /src/app && git -C /src/app archive --format=tar.gz --prefix=jellyfin-desktop/ HEAD > /src/source.tar.gz && git -C /src/app rev-parse HEAD > /src/source-commit.txt && git -C /src/app log -1 --format=%ct > /src/source-date.txt
 COPY vendor/patches/jellyfin-container-aspect.patch /src/jellyfin-container-aspect.patch
 COPY tests/aspect_contract.py /src/aspect_contract.py
+COPY vendor/patches/apply-context-menu.py vendor/patches/jellyfin-wolf-context-menu.patch /src/
+RUN python3 /src/apply-context-menu.py /src/app --diff > /src/actual-context-menu.patch && diff -u /src/jellyfin-wolf-context-menu.patch /src/actual-context-menu.patch && python3 /src/apply-context-menu.py /src/app
+COPY vendor/patches/apply-audio.py vendor/patches/jellyfin-wolf-audio.patch /src/
+RUN python3 /src/apply-audio.py /src/app --diff > /src/actual-audio.patch && diff -u /src/jellyfin-wolf-audio.patch /src/actual-audio.patch && python3 /src/apply-audio.py /src/app
 COPY vendor/patches/apply-kiosk.py vendor/patches/jellyfin-wolf-kiosk.patch /src/
 # Verify compatibility with current upstream before applying either patch.
 RUN python3 /src/apply-kiosk.py /src/app --diff > /src/actual-kiosk.patch && diff -u /src/jellyfin-wolf-kiosk.patch /src/actual-kiosk.patch && python3 /src/apply-kiosk.py /src/app
@@ -20,7 +24,7 @@ RUN dnf install -y --setopt=install_weak_deps=False python3 dbus-daemon qt6-qtwe
 COPY --from=builder /install/ /
 COPY --from=builder /src/source.tar.gz /usr/share/doc/wolf-jellyfin/jellyfin-desktop-source.tar.gz
 COPY --from=builder /src/source-commit.txt /usr/share/doc/wolf-jellyfin/jellyfin-desktop-commit.txt
-COPY vendor/patches/jellyfin-container-aspect.patch vendor/patches/jellyfin-wolf-kiosk.patch vendor/patches/apply-kiosk.py /usr/share/doc/wolf-jellyfin/
+COPY vendor/patches/jellyfin-container-aspect.patch vendor/patches/jellyfin-wolf-kiosk.patch vendor/patches/apply-kiosk.py vendor/patches/jellyfin-wolf-context-menu.patch vendor/patches/apply-context-menu.py vendor/patches/jellyfin-wolf-audio.patch vendor/patches/apply-audio.py /usr/share/doc/wolf-jellyfin/
 COPY LICENSE NOTICE.md /usr/share/doc/wolf-jellyfin/
 COPY overlay/ /
 ENV HOME=/home/retro UNAME=retro PUID=1000 PGID=1000 UMASK=077 TZ=UTC QT_QPA_PLATFORM=wayland PULSE_SERVER=unix:/run/user/wolf/pulse-socket

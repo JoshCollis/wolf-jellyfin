@@ -33,6 +33,8 @@ jobs:
           docker build --target test -t wolf-jellyfin:test .
       - name: Borderless fullscreen and recreation regression
         run: python3 tests/fullscreen.py
+      - name: Native context-menu regression
+        run: python3 tests/context_menu.py
       - name: Software native-client acceptance
         run: python3 tests/acceptance.py
       - name: Log in to GHCR
