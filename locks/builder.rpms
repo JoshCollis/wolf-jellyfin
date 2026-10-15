@@ -767,12 +767,12 @@ pulseaudio-libs-17.0-9.fc43.x86_64
 pulseaudio-libs-devel-17.0-9.fc43.x86_64
 pulseaudio-libs-glib2-17.0-9.fc43.x86_64
 python-pip-wheel-25.1.1-18.fc43.noarch
-python-unversioned-command-3.14.7-1.fc43.noarch
-python3-3.14.7-1.fc43.x86_64
+python-unversioned-command-3.14.8-1.fc43.noarch
+python3-3.14.8-1.fc43.x86_64
 python3-dbus-next-0.2.3-17.fc43.noarch
-python3-devel-3.14.7-1.fc43.x86_64
+python3-devel-3.14.8-1.fc43.x86_64
 python3-i3ipc-2.2.1-19.fc43.noarch
-python3-libs-3.14.7-1.fc43.x86_64
+python3-libs-3.14.8-1.fc43.x86_64
 python3-packaging-25.0-7.fc43.noarch
 python3-psutil-7.0.0-5.fc43.x86_64
 python3-six-1.17.0-7.fc43.noarch
