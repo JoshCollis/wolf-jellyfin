@@ -26,9 +26,9 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - name: Build pinned runtime and test image
+      - name: Build current runtime and test image
         run: |
-          docker build --target runtime -t wolf-jellyfin:local-review .
+          docker build --pull --no-cache --target runtime -t wolf-jellyfin:local-review .
           bash tests/image-home.sh
           docker build --target test -t wolf-jellyfin:test .
       - name: Borderless fullscreen and recreation regression

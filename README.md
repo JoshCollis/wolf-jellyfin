@@ -2,7 +2,10 @@
 
 Fullscreen Jellyfin Desktop for [Games on Whales Wolf](https://github.com/games-on-whales/wolf), using Qt6, native Wayland and libmpv. The app loads your Jellyfin server's web interface.
 
-Linux/amd64 only. Builds use Jellyfin Desktop development snapshot [`2cb4a44`](https://github.com/jellyfin/jellyfin-desktop/tree/2cb4a4456fd29b5b62d825ef0e5df93ed6913328), a pinned Fedora 43 base and exact RPM versions. This is not a stable Jellyfin Desktop release. Builds fail if pinned packages are unavailable or the base reaches its declared end of support (2026-12-02).
+Linux/amd64 only. Builds use the current GoW Fedora base, current Fedora/RPM Fusion
+packages and Jellyfin Desktop's upstream default branch, without version pins.
+This is a development build, not a stable Jellyfin Desktop release. Compatibility
+patches and tests must pass before CI publishes an image.
 
 A bundled one-line compatibility patch makes mpv prefer the container aspect ratio.
 A separate Wolf kiosk patch explicitly sizes the client to Qt's logical output
@@ -16,13 +19,15 @@ build instructions are included.
 ## Build
 
 ```sh
-docker build -t wolf-jellyfin:local .
+docker build --pull --no-cache -t wolf-jellyfin:local .
 ```
 
 Pushes to `main` build and test the image, then publish the runtime to
 `ghcr.io/joshcollis/wolf-jellyfin:latest` and `:sha-<commit>`. Manual workflow runs
 on `main` also publish; pull requests run unit tests without registry access.
 GHCR package visibility is managed separately from repository visibility.
+CI refreshes dependencies and source on every build. Each image includes its
+Jellyfin source archive, source commit ID and installed package inventory.
 
 ## Wolf setup
 
@@ -52,7 +57,7 @@ Requires Docker and Python 3 on the host:
 
 ```sh
 python3 -m unittest discover -s tests -v
-docker build --target runtime -t wolf-jellyfin:local .
+docker build --pull --no-cache --target runtime -t wolf-jellyfin:local .
 bash tests/image-home.sh wolf-jellyfin:local
 docker build --target test -t wolf-jellyfin:test .
 python3 tests/fullscreen.py
@@ -74,4 +79,4 @@ GPU rendering.
 
 ## License
 
-Project code is MIT. Dependencies retain their own licenses; see [`NOTICE.md`](NOTICE.md). Jellyfin Desktop's corresponding source is included in `vendor/` and the image. Review dependency source-distribution obligations before distributing container images.
+Project code is MIT. Dependencies retain their own licenses; see [`NOTICE.md`](NOTICE.md). Jellyfin Desktop's corresponding source is included in the image, alongside the local patches. Review dependency source-distribution obligations before distributing container images.

@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 -m unittest discover -s tests -v
 if [[ ${SKIP_BUILD:-0} != 1 ]]; then
-    docker build --target runtime -t wolf-jellyfin:local-review .
+    docker build --pull --no-cache --target runtime -t wolf-jellyfin:local-review .
     docker build --target test -t wolf-jellyfin:test .
 fi
 bash tests/image-home.sh wolf-jellyfin:local-review

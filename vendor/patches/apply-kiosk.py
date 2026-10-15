@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the pinned Wolf kiosk patch without adding an unpinned patch dependency.
+"""Apply the Wolf kiosk compatibility patch without a patch tool dependency.
 
 --diff prints the exact corresponding-source patch instead of modifying source.
 Fail closed if either upstream anchor changes.
@@ -42,7 +42,7 @@ changes = [
 patched = source
 for old, new in changes:
     if patched.count(old) != 1:
-        raise SystemExit('Pinned WindowManager kiosk anchor changed; re-review patch')
+        raise SystemExit('Upstream WindowManager kiosk anchor changed; re-review patch')
     patched = patched.replace(old, new)
 if '--diff' in sys.argv[2:]:
     print(''.join(difflib.unified_diff(source.splitlines(True), patched.splitlines(True),

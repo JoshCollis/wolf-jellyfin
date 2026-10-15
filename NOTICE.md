@@ -1,10 +1,11 @@
 # Third-party notices
 
 Project-specific launcher/tests/docs are MIT. Jellyfin Desktop is GPL-2.0-or-later
-(see the exact vendored source archive's LICENSE and bundled third-party notices);
-its upstream source archive plus the exact container-aspect and Wolf kiosk patches are
-vendored and copied into the image
-at `/usr/share/doc/wolf-jellyfin/jellyfin-desktop-source.tar.gz`.
+(see the upstream source archive's LICENSE and bundled third-party notices).
+Each build archives the upstream source it fetched and includes it at
+`/usr/share/doc/wolf-jellyfin/jellyfin-desktop-source.tar.gz`, alongside the exact
+container-aspect and Wolf kiosk patches. The resolved upstream commit is recorded
+in `jellyfin-desktop-commit.txt` in the same directory.
 
 This project modifies `PlayerComponent::updateVideoAspectSettings()` to use mpv's
 `-1` default aspect override instead of `no` (2026-10-14). The GPL-2.0-or-later
