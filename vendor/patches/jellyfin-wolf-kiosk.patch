@@ -1,0 +1,29 @@
+--- a/src/ui/WindowManager.cpp
++++ b/src/ui/WindowManager.cpp
+@@ -215,6 +215,17 @@
+   if (!m_window)
+     return;
+ 
++  // Wolf's minimal shell need not honour fullscreen/maximize configure requests.
++  // Size the client explicitly and remove client-side decorations as well.
++  // Use Qt's logical screen geometry (not physical pixels) for HiDPI correctness.
++  if (qEnvironmentVariableIntValue("WOLF_JELLYFIN_KIOSK") == 1)
++  {
++    enable = true;
++    m_window->setFlag(Qt::FramelessWindowHint, true);
++    if (QScreen* screen = m_window->screen())
++      m_window->setGeometry(screen->geometry());
++  }
++
+   if (enable)
+   {
+     // Use showFullScreen()
+@@ -333,7 +344,7 @@
+   if (!isFS)
+   {
+     bool forceAlwaysFS = SettingsComponent::Get().value(SETTINGS_SECTION_MAIN, "forceAlwaysFS").toBool();
+-    if (forceAlwaysFS)
++    if (forceAlwaysFS || qEnvironmentVariableIntValue("WOLF_JELLYFIN_KIOSK") == 1)
+     {
+       setFullScreen(true);
+       return;

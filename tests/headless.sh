@@ -7,7 +7,11 @@ export WLR_BACKENDS=headless WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1
 export LIBGL_ALWAYS_SOFTWARE=1 QT_QPA_PLATFORM=wayland QSG_RENDER_LOOP=basic
 unset WAYLAND_DISPLAY PULSE_SERVER
 mkdir -p "$HOME/evidence"
-printf 'xwayland disable\noutput HEADLESS-1 mode 1280x720@60Hz\nseat * hide_cursor 3000\n' > "$XDG_RUNTIME_DIR/sway.conf"
+width=${TEST_WIDTH:-1280}
+height=${TEST_HEIGHT:-720}
+[[ $width =~ ^[0-9]+$ && $height =~ ^[0-9]+$ ]]
+platform=${TEST_QT_PLATFORM:-xcb}
+printf 'xwayland disable\noutput HEADLESS-1 mode %sx%s@60Hz\nseat * hide_cursor 3000\n' "$width" "$height" > "$XDG_RUNTIME_DIR/sway.conf"
 sway -c "$XDG_RUNTIME_DIR/sway.conf" > "$HOME/evidence/sway.log" 2>&1 &
 sway_pid=$!
 python3 -m http.server --bind 127.0.0.1 --directory /opt/wolf-jellyfin/tests/fixture 8765 > "$HOME/evidence/http.log" 2>&1 &
@@ -20,11 +24,12 @@ for ((i=0; i<100; i++)); do
     sleep .1
 done
 export WAYLAND_DISPLAY=${sock%% *}
-# CPU-only acceptance uses Xvfb/GLX. Wolf's native Wayland/GPU path is a separate gate.
+# With xcb there is deliberately NO window manager to honour fullscreen sizing.
+if [[ $platform = xcb ]]; then
 export QT_QPA_PLATFORM=xcb DISPLAY=:99 XAUTHORITY=$XDG_RUNTIME_DIR/Xauthority
 : > "$XAUTHORITY"
 xauth -f "$XAUTHORITY" add :99 . "$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
-Xvfb :99 -screen 0 1280x720x24 -auth "$XAUTHORITY" -nolisten tcp -noreset > "$HOME/evidence/xvfb.log" 2>&1 &
+Xvfb :99 -screen 0 "${width}x${height}x24" -auth "$XAUTHORITY" -nolisten tcp -noreset > "$HOME/evidence/xvfb.log" 2>&1 &
 xvfb_pid=$!
 for ((i=0; i<100; i++)); do
     kill -0 "$xvfb_pid"
@@ -32,7 +37,10 @@ for ((i=0; i<100; i++)); do
     sleep .1
 done
 [[ -S /tmp/.X11-unix/X99 ]]
-export GAMESCOPE_WIDTH=1280 GAMESCOPE_HEIGHT=720 GAMESCOPE_REFRESH=60
+elif [[ $platform != wayland ]]; then
+    echo 'Unsupported TEST_QT_PLATFORM' >&2; exit 1
+fi
+export GAMESCOPE_WIDTH=$width GAMESCOPE_HEIGHT=$height GAMESCOPE_REFRESH=60
 [[ -S $WAYLAND_DISPLAY ]]
 # Test-only Pulse daemon; production uses Wolf's mounted server socket instead.
 pulseaudio --daemonize=yes --exit-idle-time=-1 --load='module-null-sink sink_name=test-sink'

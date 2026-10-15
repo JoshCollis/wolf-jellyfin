@@ -48,6 +48,7 @@ class Contract(unittest.TestCase):
             handlers={}
             child=Mock(pid=12345)
             def launch(*args,**kwargs):
+                self.assertEqual(kwargs['env'].get('WOLF_JELLYFIN_KIOSK'),'1')
                 handlers[signal.SIGTERM](signal.SIGTERM,None)
                 return child
             with patch.dict(os.environ,env,clear=True), \

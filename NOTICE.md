@@ -2,7 +2,7 @@
 
 Project-specific launcher/tests/docs are MIT. Jellyfin Desktop is GPL-2.0-or-later
 (see the exact vendored source archive's LICENSE and bundled third-party notices);
-its upstream source archive plus the exact container-aspect compatibility patch are
+its upstream source archive plus the exact container-aspect and Wolf kiosk patches are
 vendored and copied into the image
 at `/usr/share/doc/wolf-jellyfin/jellyfin-desktop-source.tar.gz`.
 
@@ -10,6 +10,12 @@ This project modifies `PlayerComponent::updateVideoAspectSettings()` to use mpv'
 `-1` default aspect override instead of `no` (2026-10-14). The GPL-2.0-or-later
 modification is provided as `vendor/patches/jellyfin-container-aspect.patch` and
 copied alongside the source. The Dockerfile records the complete build procedure.
+
+The additional GPL-2.0-or-later `vendor/patches/jellyfin-wolf-kiosk.patch` modifies
+`WindowManager::setFullScreen()` and `onVisibilityChanged()` for an opt-in
+borderless, explicitly output-sized Wolf kiosk. The strict application helper
+`vendor/patches/apply-kiosk.py` and exact patch are copied alongside the source.
+The image launcher enables this policy without replacing persistent user data.
 
 Official GoW base/entrypoint/device/NVIDIA infrastructure is MIT:
 https://github.com/games-on-whales/gow/blob/bc4bb677e3376e17265317f23d887ecf42de8972/LICENSE

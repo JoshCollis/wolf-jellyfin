@@ -83,6 +83,8 @@ def read_parent(env):
 
 def main():
     env=os.environ.copy()
+    # This image is a single-app Wolf kiosk, not a managed desktop window.
+    env['WOLF_JELLYFIN_KIOSK']='1'
     if os.getuid()==0: raise ValueError('Refusing to launch Qt WebEngine as root')
     home=Path(env['HOME']);profile=profile_name(env.get('JELLYFIN_PROFILE','Default'))
     # Lease deliberately covers the entire HOME: Qt global profiles.json also writes here.

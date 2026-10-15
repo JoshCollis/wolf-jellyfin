@@ -4,7 +4,14 @@ Fullscreen Jellyfin Desktop for [Games on Whales Wolf](https://github.com/games-
 
 Linux/amd64 only. Builds use Jellyfin Desktop development snapshot [`2cb4a44`](https://github.com/jellyfin/jellyfin-desktop/tree/2cb4a4456fd29b5b62d825ef0e5df93ed6913328), a pinned Fedora 43 base and exact RPM versions. This is not a stable Jellyfin Desktop release. Builds fail if pinned packages are unavailable or the base reaches its declared end of support (2026-12-02).
 
-A bundled one-line compatibility patch makes mpv prefer the container aspect ratio. Original source, patch and build instructions are included.
+A bundled one-line compatibility patch makes mpv prefer the container aspect ratio.
+A separate Wolf kiosk patch explicitly sizes the client to Qt's logical output
+geometry and removes window decorations instead of relying on a desktop window
+manager to honour fullscreen/maximize requests. The launcher enables this policy
+with `WOLF_JELLYFIN_KIOSK=1`; exiting fullscreen/minimizing is intentionally blocked
+in this single-app image. Closing/quitting still works. Existing accounts, web
+storage and unrelated settings are preserved. Original source, exact patches and
+build instructions are included.
 
 ## Build
 
@@ -48,6 +55,7 @@ python3 -m unittest discover -s tests -v
 docker build --target runtime -t wolf-jellyfin:local .
 bash tests/image-home.sh wolf-jellyfin:local
 docker build --target test -t wolf-jellyfin:test .
+python3 tests/fullscreen.py
 python3 tests/acceptance.py
 ```
 

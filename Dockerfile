@@ -10,6 +10,9 @@ COPY vendor/jellyfin-desktop.tar.gz /src/source.tar.gz
 RUN echo '285cabe7dce0c8eaa48823e75cfa882f4d740e3550f79878f05b0d8025d55f1c  /src/source.tar.gz' | sha256sum -c - && tar -xf /src/source.tar.gz -C /src && mv /src/jellyfin-desktop-* /src/app
 COPY vendor/patches/jellyfin-container-aspect.patch /src/jellyfin-container-aspect.patch
 COPY tests/aspect_contract.py /src/aspect_contract.py
+COPY vendor/patches/apply-kiosk.py vendor/patches/jellyfin-wolf-kiosk.patch /src/
+# Keep the distributed diff identical to the strict source transformation.
+RUN python3 /src/apply-kiosk.py /src/app --diff > /src/actual-kiosk.patch && diff -u /src/jellyfin-wolf-kiosk.patch /src/actual-kiosk.patch && python3 /src/apply-kiosk.py /src/app
 # Equivalent to the shipped one-line patch; strict source guard, no fuzzy application.
 RUN python3 -c 'from pathlib import Path; p=Path("/src/app/src/player/PlayerComponent.cpp"); s=p.read_text(); old="QString forceAspect = \"no\";"; assert s.count(old)==1; p.write_text(s.replace(old,"QString forceAspect = \"-1\";"))' && python3 /src/aspect_contract.py /src/app/src/player/PlayerComponent.cpp && cmake -S /src/app -B /build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DENABLE_CEC=OFF -DENABLE_LIRC=OFF -DCHECK_FOR_UPDATES=OFF && cmake --build /build -j 2 && ctest --test-dir /build --output-on-failure && DESTDIR=/install cmake --install /build
 FROM ${BASE_IMAGE} AS runtime
@@ -20,7 +23,7 @@ COPY locks/runtime.rpms /locks/runtime.rpms
 RUN source /etc/os-release && test "$(date -u +%F)" '<' "$SUPPORT_END" && dnf install -y --setopt=install_weak_deps=False $(cat /locks/runtime.rpms) && dnf clean all && rm -rf /home/retro/.local && rpm -qa --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' | python3 -c 'import sys; sys.stdout.write("".join(sorted(x for x in sys.stdin if not x.startswith("gpg-pubkey-"))))' | grep -v '^gpg-pubkey-' > /usr/share/packages-wolf-jellyfin.txt && diff -u /locks/runtime.rpms /usr/share/packages-wolf-jellyfin.txt
 COPY --from=builder /install/ /
 COPY vendor/jellyfin-desktop.tar.gz /usr/share/doc/wolf-jellyfin/jellyfin-desktop-source.tar.gz
-COPY vendor/patches/jellyfin-container-aspect.patch /usr/share/doc/wolf-jellyfin/
+COPY vendor/patches/jellyfin-container-aspect.patch vendor/patches/jellyfin-wolf-kiosk.patch vendor/patches/apply-kiosk.py /usr/share/doc/wolf-jellyfin/
 COPY LICENSE NOTICE.md /usr/share/doc/wolf-jellyfin/
 COPY overlay/ /
 ENV HOME=/home/retro UNAME=retro PUID=1000 PGID=1000 UMASK=077 TZ=UTC QT_QPA_PLATFORM=wayland PULSE_SERVER=unix:/run/user/wolf/pulse-socket
