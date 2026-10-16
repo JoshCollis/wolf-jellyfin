@@ -50,6 +50,8 @@ class AudioPatch(unittest.TestCase):
         self.source = self.root / 'src/player/MpvVideoItem.cpp'
         self.source.parent.mkdir(parents=True)
         self.source.write_text(SOURCE)
+        from test_audio_enumeration import PLAYER
+        (self.source.parent / 'PlayerComponent.cpp').write_text(PLAYER)
 
     def apply(self, *args):
         return subprocess.run([sys.executable, str(APPLY), str(self.root), *args],

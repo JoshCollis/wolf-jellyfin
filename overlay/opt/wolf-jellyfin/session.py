@@ -85,6 +85,10 @@ def main():
     env=os.environ.copy()
     # This image is a single-app Wolf kiosk, not a managed desktop window.
     env['WOLF_JELLYFIN_KIOSK']='1'
+    # Qt's threaded loop can deadlock GUI exposure against Wayland frame sync
+    # during mpv video/UI transitions. Keep GPU rendering, but on the GUI thread.
+    # Preserve an explicit override for controlled renderer A/B diagnostics.
+    env.setdefault('QSG_RENDER_LOOP','basic')
     if os.getuid()==0: raise ValueError('Refusing to launch Qt WebEngine as root')
     home=Path(env['HOME']);profile=profile_name(env.get('JELLYFIN_PROFILE','Default'))
     # Lease deliberately covers the entire HOME: Qt global profiles.json also writes here.

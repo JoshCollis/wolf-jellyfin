@@ -16,7 +16,10 @@ in this single-app image. Closing/quitting still works. Existing accounts, web
 storage and unrelated settings are preserved. Original source, exact patches and
 build instructions are included.
 Wolf kiosk mode also selects PulseAudio output and suppresses Qt's native context
-menu while preserving the web client's context-menu events.
+menu while preserving the web client's context-menu events. It avoids cross-backend
+audio-device discovery and uses the automatic Pulse output routed by `PULSE_SERVER`
+and `PULSE_SINK`. The launcher defaults to Qt's `basic` render loop while retaining
+Wayland and GPU rendering; `QSG_RENDER_LOOP` can explicitly override it.
 
 ## Build
 
@@ -55,7 +58,10 @@ A shared Wolf lobby shares the same UI, playback and logged-in account with all 
 
 ## Tests
 
-Requires Docker, Python 3 and a C++ compiler on the host:
+Requires Docker, Python 3 and a C++ compiler on the host. The compiled audio-device
+regression also needs Qt6 Core development headers and `pkg-config` (Ubuntu:
+`sudo apt-get install g++ pkg-config qt6-base-dev`). Alternatively set
+`AUDIO_TEST_BUILDER` to an existing Docker builder image containing those tools.
 
 ```sh
 python3 -m unittest discover -s tests -v

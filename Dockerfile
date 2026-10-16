@@ -13,7 +13,10 @@ COPY tests/aspect_contract.py /src/aspect_contract.py
 COPY vendor/patches/apply-context-menu.py vendor/patches/jellyfin-wolf-context-menu.patch /src/
 RUN python3 /src/apply-context-menu.py /src/app --diff > /src/actual-context-menu.patch && diff -u /src/jellyfin-wolf-context-menu.patch /src/actual-context-menu.patch && python3 /src/apply-context-menu.py /src/app
 COPY vendor/patches/apply-audio.py vendor/patches/jellyfin-wolf-audio.patch /src/
-RUN python3 /src/apply-audio.py /src/app --diff > /src/actual-audio.patch && diff -u /src/jellyfin-wolf-audio.patch /src/actual-audio.patch && python3 /src/apply-audio.py /src/app
+COPY vendor/patches/apply-audio.py vendor/patches/jellyfin-wolf-audio.patch /src/audio-contract/vendor/patches/
+COPY tests/test_audio_patch.py tests/test_audio_enumeration.py /src/audio-contract/tests/
+# Exercise actual upstream observer/getter with poisoned enumeration before patching.
+RUN AUDIO_TEST_BUILDER=local AUDIO_UPSTREAM_SOURCE=/src/app python3 -m unittest discover -s /src/audio-contract/tests -p 'test_audio*.py' -v && python3 /src/apply-audio.py /src/app --diff > /src/actual-audio.patch && diff -u /src/jellyfin-wolf-audio.patch /src/actual-audio.patch && python3 /src/apply-audio.py /src/app
 COPY vendor/patches/apply-kiosk.py vendor/patches/jellyfin-wolf-kiosk.patch /src/
 # Verify compatibility with current upstream before applying either patch.
 RUN python3 /src/apply-kiosk.py /src/app --diff > /src/actual-kiosk.patch && diff -u /src/jellyfin-wolf-kiosk.patch /src/actual-kiosk.patch && python3 /src/apply-kiosk.py /src/app

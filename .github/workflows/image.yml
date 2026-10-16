@@ -14,7 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install native regression dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends g++ pkg-config qt6-base-dev
       - name: Unit tests
+        env:
+          AUDIO_TEST_BUILDER: local
         run: python3 -m unittest discover -s tests -v
   publish:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

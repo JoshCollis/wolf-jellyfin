@@ -23,6 +23,8 @@ context menu in Wolf kiosk mode without blocking the web client's context-menu
 events. `jellyfin-wolf-audio.patch` selects libmpv's PulseAudio output in that mode
 through MpvQt's initial property queue (2026-10-15). Both patches and their strict
 application helpers are included alongside the source.
+The audio patch also bypasses cross-backend device observation and reads in Wolf
+mode, returning a single automatic Pulse output (2026-10-16).
 
 Official GoW base/entrypoint/device/NVIDIA infrastructure is MIT:
 https://github.com/games-on-whales/gow/blob/bc4bb677e3376e17265317f23d887ecf42de8972/LICENSE

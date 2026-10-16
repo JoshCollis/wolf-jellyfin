@@ -1,8 +1,6 @@
 --- a/src/player/MpvVideoItem.cpp
 +++ b/src/player/MpvVideoItem.cpp
-@@ -9,6 +9,11 @@
-     qDebug() << "MpvVideoItem constructed";
-     // Critical: Set vo=libmpv for Qt integration
+@@ -11,2 +11,7 @@
      Q_EMIT setProperty("vo", "libmpv");
 +
 +    // Wolf transports audio over its mounted Pulse socket, not native PipeWire.
@@ -10,5 +8,22 @@
 +    if (qEnvironmentVariableIntValue("WOLF_JELLYFIN_KIOSK") == 1)
 +        Q_EMIT setProperty("ao", "pulse");
  
- #ifdef Q_OS_WIN32
-     // Force desktop OpenGL and disable advanced features for compatibility with older GPUs
+--- a/src/player/PlayerComponent.cpp
++++ b/src/player/PlayerComponent.cpp
+@@ -186,3 +186,6 @@
+   mpv_observe_property(m_mpv->mpv(), 0, "duration", MPV_FORMAT_DOUBLE);
+-  mpv_observe_property(m_mpv->mpv(), 0, "audio-device-list", MPV_FORMAT_NODE);
++  // ao=pulse does not limit device discovery: libmpv probes every backend.
++  // Wolf has one mounted Pulse transport; avoid native PipeWire hotplug entirely.
++  if (qEnvironmentVariableIntValue("WOLF_JELLYFIN_KIOSK") != 1)
++    mpv_observe_property(m_mpv->mpv(), 0, "audio-device-list", MPV_FORMAT_NODE);
+   mpv_observe_property(m_mpv->mpv(), 0, "video-dec-params", MPV_FORMAT_NODE);
+@@ -860,2 +863,8 @@
+ {
++  // Keep the upstream QVariantList<QVariantMap> schema used by settings/WebChannel.
++  // "auto" resolves through ao=pulse, retaining Pulse's configured default sink.
++  if (qEnvironmentVariableIntValue("WOLF_JELLYFIN_KIOSK") == 1)
++    return QVariantList{QVariantMap{{"name", "auto"},
++                                   {"description", "Wolf PulseAudio (default)"}}};
++
+   if (!m_mpv) {

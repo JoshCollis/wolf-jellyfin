@@ -49,6 +49,7 @@ class Contract(unittest.TestCase):
             child=Mock(pid=12345)
             def launch(*args,**kwargs):
                 self.assertEqual(kwargs['env'].get('WOLF_JELLYFIN_KIOSK'),'1')
+                self.assertEqual(kwargs['env'].get('QSG_RENDER_LOOP'),'basic')
                 handlers[signal.SIGTERM](signal.SIGTERM,None)
                 return child
             with patch.dict(os.environ,env,clear=True), \
@@ -63,6 +64,20 @@ class Contract(unittest.TestCase):
                 self.assertEqual(len(run.call_args_list),2)
                 for call in run.call_args_list:
                     self.assertEqual(call.kwargs['timeout'],15)
+    def test_explicit_render_loop_override_preserved(self):
+        with tempfile.TemporaryDirectory() as d:
+            env={'HOME':d,'XDG_RUNTIME_DIR':d,'GAMESCOPE_WIDTH':'1280',
+                 'GAMESCOPE_HEIGHT':'720','GAMESCOPE_REFRESH':'60',
+                 'QSG_RENDER_LOOP':'threaded'}
+            with patch.dict(os.environ,env,clear=True), \
+                 patch.object(self.s.os,'getuid',return_value=1000), \
+                 patch.object(self.s,'read_parent',return_value=(1280,720,60000)), \
+                 patch.object(self.s.subprocess,'run',return_value=Mock(stdout='Default\n')), \
+                 patch.object(self.s.signal,'signal'), \
+                 patch.object(self.s.subprocess,'Popen',side_effect=RuntimeError('captured launch')) as launch:
+                with self.assertRaisesRegex(RuntimeError,'captured launch'):
+                    self.s.main()
+                self.assertEqual(launch.call_args.kwargs['env']['QSG_RENDER_LOOP'],'threaded')
     def test_client_fullscreen_no_unsafe_flags(self):
         args=self.s.client_args('Default',[])
         self.assertIn('--fullscreen',args);self.assertIn('--tv',args)
