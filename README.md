@@ -52,7 +52,14 @@ The example relaxes seccomp and AppArmor to allow Chromium's namespace sandbox. 
 
 Select your server and log in interactively. The HOME mount persists settings, profiles and web storage. `JELLYFIN_PROFILE` defaults to `Default` and accepts 1–64 letters, digits, underscores or hyphens. A home-wide advisory lock prevents cooperating sessions from writing the same HOME concurrently; it is not a distributed lock.
 
-Fullscreen TV layout and upstream keyboard/controller mappings are enabled. Native mpv uses upstream hardware-decoding preferences with software fallback. Leave automatic refresh switching disabled: Wolf owns the output mode. Use Wolf's PulseAudio stream rather than HDMI passthrough.
+Native fullscreen kiosk mode remains enabled, with the **new desktop** browsing
+layout by default (not legacy desktop). The supported `--desktop` launch option
+also overrides a previously saved native TV layout. Explicit `--tv`/`--desktop`
+arguments are preserved; an explicit web Display preference still takes precedence
+over the native default. See [layout verification and limits](docs/desktop-default.md).
+Native mpv uses upstream hardware-decoding preferences with software fallback.
+Leave automatic refresh switching disabled: Wolf owns the output mode. Use Wolf's
+PulseAudio stream rather than HDMI passthrough.
 
 A shared Wolf lobby shares the same UI, playback and logged-in account with all participants. Use separate homes for independent accounts.
 

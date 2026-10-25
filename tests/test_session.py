@@ -50,6 +50,9 @@ class Contract(unittest.TestCase):
             def launch(*args,**kwargs):
                 self.assertEqual(kwargs['env'].get('WOLF_JELLYFIN_KIOSK'),'1')
                 self.assertEqual(kwargs['env'].get('QSG_RENDER_LOOP'),'basic')
+                self.assertIn('--desktop',args[0])
+                self.assertNotIn('--tv',args[0])
+                self.assertIn('--fullscreen',args[0])
                 handlers[signal.SIGTERM](signal.SIGTERM,None)
                 return child
             with patch.dict(os.environ,env,clear=True), \
@@ -80,9 +83,27 @@ class Contract(unittest.TestCase):
                 self.assertEqual(launch.call_args.kwargs['env']['QSG_RENDER_LOOP'],'threaded')
     def test_client_fullscreen_no_unsafe_flags(self):
         args=self.s.client_args('Default',[])
-        self.assertIn('--fullscreen',args);self.assertIn('--tv',args)
+        self.assertIn('--fullscreen',args);self.assertIn('--desktop',args)
+        self.assertNotIn('--tv',args)
         self.assertNotIn('--no-sandbox',args)
         self.assertEqual(args[-2:],['--profile','Default'])
+    def test_explicit_supported_layout_override(self):
+        for flag in ('--tv','--desktop'):
+            with self.subTest(flag=flag):
+                args=self.s.client_args('family-1',[flag,'--log-level','info'])
+                self.assertEqual([x for x in args if x in ('--tv','--desktop')],[flag])
+                self.assertIn('--fullscreen',args)
+                self.assertEqual(args[-2:],['--profile','family-1'])
+    def test_startup_forwards_explicit_options(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            fake=Path(d)/'python3'
+            fake.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
+            fake.chmod(0o700)
+            result=subprocess.run(['bash',str(ROOT/'overlay/opt/gow/startup.sh'),'--tv'],
+                                  env=os.environ|{'PATH':d+':'+os.environ['PATH']},
+                                  check=True,text=True,capture_output=True)
+            self.assertEqual(result.stdout.splitlines(),['/opt/wolf-jellyfin/session.py','--tv'])
     def test_graceful_shutdown_does_not_kill_renderer_first(self):
         import subprocess,sys,time
         with tempfile.TemporaryDirectory() as d:

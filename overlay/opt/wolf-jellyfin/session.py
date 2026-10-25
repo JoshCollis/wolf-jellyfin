@@ -57,7 +57,10 @@ def lease(home):
 
 
 def client_args(profile,extra):
-    return ['/usr/local/bin/jellyfin-desktop','--fullscreen','--tv',*extra,'--profile',profile]
+    # Use the supported override even for homes with a saved native TV layout.
+    # Do not inject competing layout flags when the caller chose one explicitly.
+    layout=[] if any(flag in extra for flag in ('--desktop','--tv')) else ['--desktop']
+    return ['/usr/local/bin/jellyfin-desktop','--fullscreen',*layout,*extra,'--profile',profile]
 
 
 def shutdown(child,app_pid):
